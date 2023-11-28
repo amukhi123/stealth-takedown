@@ -1,16 +1,21 @@
 #include "CharacterController.h"
+#include "Enemy.h"
 
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 
 #include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Gameframework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "MotionWarpingComponent.h"
 
-ACharacterController::ACharacterController() : m_Camera {CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"))}, m_SpringArmComponent {CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"))}, m_InputMappingContext {}, m_MoveInputAction {}
+#include "Math/Vector.h"
+
+ACharacterController::ACharacterController() : m_Camera {CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"))}, m_SpringArmComponent {CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"))}, m_MotionWarpingComponent {CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarping"))}, m_InputMappingContext {}, m_MoveInputAction {}, m_AssassinateInputAction {}, m_MaxAssassinateDistance {}, m_State {ECharacterState::Default}
 {
-	if (TObjectPtr<USceneComponent> rootComponent {GetRootComponent()})
+	if (const TObjectPtr<USceneComponent> rootComponent {GetRootComponent()})
 	{
 		if (m_SpringArmComponent)
 		{
@@ -47,7 +52,7 @@ void ACharacterController::BeginPlay()
 		}
 	}
 
-	if (TObjectPtr<UCharacterMovementComponent> characterMovementComponent {GetCharacterMovement()})
+	if (const TObjectPtr<UCharacterMovementComponent> characterMovementComponent {GetCharacterMovement()})
 	{
 		characterMovementComponent->bOrientRotationToMovement = true;
 	}
@@ -73,26 +78,34 @@ void ACharacterController::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		{
 			enhancedInputComponent->BindAction(m_LookInputAction, ETriggerEvent::Triggered, this, &ACharacterController::Look);
 		}
+
+		if (m_AssassinateInputAction)
+		{
+			enhancedInputComponent->BindAction(m_AssassinateInputAction, ETriggerEvent::Triggered, this, &ACharacterController::Assassinate);
+		}
 	}
 }
 
 void ACharacterController::Move(const FInputActionValue& InputActionValue)
 {
-	const FVector2D movementInput {InputActionValue.Get<FVector2D>()};
-	const FRotator yawRotation {0.0, GetControlRotation().Yaw, 0.0};
-
-	if (movementInput.X != 0)
+	if (State() == ECharacterState::Default)
 	{
-		FVector movementDirection {FRotationMatrix(yawRotation).GetUnitAxis(EAxis::Y)};
-
-		AddMovementInput(movementDirection, movementInput.X);
-	}
-
-	if (movementInput.Y != 0)
-	{
-		FVector movementDirection {FRotationMatrix(yawRotation).GetUnitAxis(EAxis::X)};
-
-		AddMovementInput(movementDirection, movementInput.Y);
+		const FVector2D movementInput {InputActionValue.Get<FVector2D>()};
+		const FRotator yawRotation {0.0, GetControlRotation().Yaw, 0.0};
+	
+		if (movementInput.X != 0)
+		{
+			FVector movementDirection {FRotationMatrix(yawRotation).GetUnitAxis(EAxis::Y)};
+	
+			AddMovementInput(movementDirection, movementInput.X);
+		}
+	
+		if (movementInput.Y != 0)
+		{
+			FVector movementDirection {FRotationMatrix(yawRotation).GetUnitAxis(EAxis::X)};
+	
+			AddMovementInput(movementDirection, movementInput.Y);
+		}
 	}
 }
 
@@ -114,6 +127,49 @@ void ACharacterController::Look(const FInputActionValue& InputActionValue)
 		if (yLookRotation != 0)
 		{
 			AddControllerPitchInput(-yLookRotation);
+		}
+	}
+}
+
+void ACharacterController::Assassinate(const FInputActionValue& InputActionValue)
+{
+	if (const TObjectPtr<const UWorld> world {GetWorld()})
+	{
+		FHitResult hit {};
+
+		const FVector rayStart {GetActorLocation()};
+		const FVector rayEnd {rayStart + (GetActorForwardVector() * m_MaxAssassinateDistance)};
+
+		if (world->LineTraceSingleByObjectType(hit, rayStart, rayEnd, FCollisionObjectQueryParams(ECollisionChannel::ECC_WorldStatic)))
+		{
+			if (m_MotionWarpingComponent && m_AssassinationMontage)
+			{
+				if (const TObjectPtr<const AActor> enemy {hit.GetActor()})
+				{
+					const double enemyCharacterDot {GetActorForwardVector().Dot(enemy->GetActorForwardVector())};
+
+					if (enemyCharacterDot >= m_MinDotValue && enemyCharacterDot <= 1.0)
+					{
+						m_State = ECharacterState::Assassinating;
+
+						if (const TObjectPtr<const AEnemy> enemyScript {Cast<AEnemy>(enemy)})
+						{
+							if (const TObjectPtr<UCapsuleComponent> enemyCapsuleComponent {enemyScript->CapsuleComponent()})
+							{
+								enemyCapsuleComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+							}
+	
+							const FVector assassinationPosition {enemyScript->AssassinationPosition()->GetComponentLocation()};
+	
+							const FTransform targetTransform {GetActorRotation(), assassinationPosition, GetActorScale()};
+		
+							m_MotionWarpingComponent->AddOrUpdateWarpTarget(FMotionWarpingTarget(FName("AssassinateTarget"), targetTransform));
+							
+							PlayAnimMontage(m_AssassinationMontage);
+						}
+					}	
+				}
+			}
 		}
 	}
 }
