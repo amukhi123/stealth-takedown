@@ -30,7 +30,7 @@ ACharacterController::ACharacterController() : m_Camera {CreateDefaultSubobject<
 		}
 	}
 
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -56,11 +56,6 @@ void ACharacterController::BeginPlay()
 	{
 		characterMovementComponent->bOrientRotationToMovement = true;
 	}
-}
-
-void ACharacterController::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 void ACharacterController::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) 

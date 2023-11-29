@@ -6,10 +6,6 @@
 
 #include "Kismet/KismetMathLibrary.h"
 
-UPlayerAnimInstance::UPlayerAnimInstance()
-{
-}
-
 double UPlayerAnimInstance::GroundSpeed() const
 {
 	if (const TObjectPtr<const APawn> character {TryGetPawnOwner()})
@@ -34,14 +30,4 @@ bool UPlayerAnimInstance::IsAssassinating() const
 	}
 
 	return false;
-}
-
-void UPlayerAnimInstance::NativeInitializeAnimation()
-{
-	Super::NativeInitializeAnimation();
-}
-
-void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaTime)
-{
-	Super::NativeUpdateAnimation(DeltaTime);
 }

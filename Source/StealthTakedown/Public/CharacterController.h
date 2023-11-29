@@ -74,8 +74,6 @@ private:
 
 	void BeginPlay() override;
 
-	void Tick(float DeltaTime) override;
-
 	void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
 	void Move(const FInputActionValue& InputActionValue);

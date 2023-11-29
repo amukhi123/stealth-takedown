@@ -4,7 +4,7 @@
 
 void UPlayerResetStateAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
-	if (MeshComp) // Ignore enemy for camera
+	if (MeshComp)
 	{
 		if (const TObjectPtr<const AActor> character {MeshComp->GetOwner()})
 		{
