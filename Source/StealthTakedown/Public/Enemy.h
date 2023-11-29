@@ -8,6 +8,8 @@ class USkeletalMeshComponent;
 class UCapsuleComponent;
 class USceneComponent;
 
+class UAnimMontage;
+
 UCLASS()
 class STEALTHTAKEDOWN_API AEnemy : public AActor
 {
@@ -24,6 +26,8 @@ public:
 	{
 		return m_AssassniationPosition;
 	}
+
+	void Die() const;
 private:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<USkeletalMeshComponent> m_SkeletalMeshComponent;
@@ -31,6 +35,11 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UCapsuleComponent> m_CapsuleComponent;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Assassination)
 	TObjectPtr<USceneComponent> m_AssassniationPosition;
+
+	UPROPERTY(EditDefaultsOnly, Category = Assassination)
+	TObjectPtr<UAnimMontage> m_AssassinatedAnimMontage;
+
+	void PlayAnimMontage() const;
 };

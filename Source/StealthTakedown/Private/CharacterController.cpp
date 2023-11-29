@@ -13,7 +13,7 @@
 
 #include "Math/Vector.h"
 
-ACharacterController::ACharacterController() : m_Camera {CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"))}, m_SpringArmComponent {CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"))}, m_MotionWarpingComponent {CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarping"))}, m_InputMappingContext {}, m_MoveInputAction {}, m_AssassinateInputAction {}, m_MaxAssassinateDistance {}, m_State {ECharacterState::Default}
+ACharacterController::ACharacterController() : m_Camera {CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"))}, m_SpringArmComponent {CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"))}, m_MotionWarpingComponent {CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarping"))}, m_InputMappingContext {}, m_MoveInputAction {}, m_AssassinateInputAction {}, m_MaxAssassinateDistance {}, m_State {ECharacterState::Default}, m_MinDotValue {}
 {
 	if (const TObjectPtr<USceneComponent> rootComponent {GetRootComponent()})
 	{
@@ -161,11 +161,13 @@ void ACharacterController::Assassinate(const FInputActionValue& InputActionValue
 	
 							const FVector assassinationPosition {enemyScript->AssassinationPosition()->GetComponentLocation()};
 	
-							const FTransform targetTransform {GetActorRotation(), assassinationPosition, GetActorScale()};
+							const FTransform targetTransform {enemy->GetActorRotation(), assassinationPosition, GetActorScale()};
 		
 							m_MotionWarpingComponent->AddOrUpdateWarpTarget(FMotionWarpingTarget(FName("AssassinateTarget"), targetTransform));
 							
 							PlayAnimMontage(m_AssassinationMontage);
+
+							enemyScript->Die();
 						}
 					}	
 				}

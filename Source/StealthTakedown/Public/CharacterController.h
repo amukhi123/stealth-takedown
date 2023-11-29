@@ -13,8 +13,6 @@ class UMotionWarpingComponent;
 
 struct FInputActionValue;
 
-//DECLARE_DELEGATE(
-
 UENUM()
 enum class ECharacterState : uint8
 {
