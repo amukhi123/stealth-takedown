@@ -67,6 +67,9 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = Assassination)
 	float m_MaxAssassinateDistance;
 
+	UPROPERTY(EditDefaultsOnly, Category = Assassination)
+	float m_SphereCastSize;
+
 	UPROPERTY(EditDefaultsOnly, Category = Assassination, meta=(ClampMin="0.0", ClampMax="1.0"))
 	double m_MinDotValue;
 
@@ -81,4 +84,6 @@ private:
 	void Look(const FInputActionValue& InputActionValue);
 
 	void Assassinate(const FInputActionValue& InputActionValue);
+
+	void PerformSphereCast(const TObjectPtr<const UWorld>& World, FHitResult& OutHitResult) const;
 };

@@ -11,9 +11,11 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "MotionWarpingComponent.h"
 
+#include "Kismet/KismetSystemLibrary.h"
+
 #include "Math/Vector.h"
 
-ACharacterController::ACharacterController() : m_Camera {CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"))}, m_SpringArmComponent {CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"))}, m_MotionWarpingComponent {CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarping"))}, m_InputMappingContext {}, m_MoveInputAction {}, m_AssassinateInputAction {}, m_MaxAssassinateDistance {}, m_State {ECharacterState::Default}, m_MinDotValue {}
+ACharacterController::ACharacterController() : m_Camera {CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"))}, m_SpringArmComponent {CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"))}, m_MotionWarpingComponent {CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarping"))}, m_InputMappingContext {}, m_MoveInputAction {}, m_AssassinateInputAction {}, m_MaxAssassinateDistance {}, m_SphereCastSize {}, m_MinDotValue {}, m_State {ECharacterState::Default}
 {
 	if (const TObjectPtr<USceneComponent> rootComponent {GetRootComponent()})
 	{
@@ -132,10 +134,9 @@ void ACharacterController::Assassinate(const FInputActionValue& InputActionValue
 	{
 		FHitResult hit {};
 
-		const FVector rayStart {GetActorLocation()};
-		const FVector rayEnd {rayStart + (GetActorForwardVector() * m_MaxAssassinateDistance)};
+		PerformSphereCast(world, hit);
 
-		if (world->LineTraceSingleByObjectType(hit, rayStart, rayEnd, FCollisionObjectQueryParams(ECollisionChannel::ECC_WorldStatic)))
+		if (hit.bBlockingHit)
 		{
 			if (m_MotionWarpingComponent && m_AssassinationMontage)
 			{
@@ -169,4 +170,23 @@ void ACharacterController::Assassinate(const FInputActionValue& InputActionValue
 			}
 		}
 	}
+}
+
+void ACharacterController::PerformSphereCast(const TObjectPtr<const UWorld>& World, FHitResult& OutHitResult) const
+{
+	const FVector rayStart {GetActorLocation()};
+	const FVector rayEnd {rayStart + (GetActorForwardVector() * m_MaxAssassinateDistance)};
+
+	TArray<TEnumAsByte<EObjectTypeQuery>> sphereTraceObjectTypes {};
+
+	sphereTraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldStatic));
+
+	TArray<TObjectPtr<AActor>> actorsToIgnore {};
+
+	if (TObjectPtr<AActor> character {GetOwner()})
+	{
+		actorsToIgnore.Add(character);
+	}
+
+	UKismetSystemLibrary::SphereTraceSingleForObjects(World, rayStart, rayEnd, m_SphereCastSize, sphereTraceObjectTypes, false, actorsToIgnore, EDrawDebugTrace::None, OutHitResult, true);
 }
