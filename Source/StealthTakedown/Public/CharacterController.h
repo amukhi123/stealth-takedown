@@ -28,7 +28,6 @@ GENERATED_BODY()
 public:
 	ACharacterController();
 
-	// Perhaps this should be replaced with a player state
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE ECharacterState State() const
 	{

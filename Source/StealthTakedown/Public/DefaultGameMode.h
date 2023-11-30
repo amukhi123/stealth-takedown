@@ -7,5 +7,5 @@
 UCLASS()
 class STEALTHTAKEDOWN_API ADefaultGameMode : public AGameModeBase
 {
-	GENERATED_BODY()
+GENERATED_BODY()
 };
