@@ -12,7 +12,9 @@ WASD - Movement
 
 ## Gallery
 
-Coming soon.
+### **Click the thumbnail to play the video**
+
+[![Stealth Takedown | Recreating Game Mechanics](https://img.youtube.com/vi/8odgHuT3Ydk/0.jpg)](https://youtu.be/8odgHuT3Ydk)
 
 ## Tech Stack
 
